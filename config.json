@@ -1,0 +1,46 @@
+{
+  "model": {
+    "path": "./cashew_26n_ncnn_model",
+    "conf_threshold": 0.3,
+    "imgsz": 736
+  },
+  "camera": {
+    "device_id": 0,
+    "width": 720,
+    "height": 720,
+    "fps_display": true
+  },
+  "regions": {
+    "region_a": {
+      "y_min": 0,
+      "y_max": 360,
+      "line_trigger_y": 280
+    },
+    "region_b": {
+      "y_min": 360,
+      "y_max": 720,
+      "line_trigger_y": 550
+    }
+  },
+  "servo_1": {
+    "pin": 14,
+    "min_pulse_width": 0.0005,
+    "max_pulse_width": 0.0026,
+    "default_angle": 0.0,
+    "active_angle": 90.0,
+    "hold_time": 0.3,
+    "delay": 1.0
+  },
+  "servo_2": {
+    "pin": 15,
+    "min_pulse_width": 0.0005,
+    "max_pulse_width": 0.0026,
+    "default_angle": 90.0,
+    "active_angle": 45.0,
+    "hold_time": 0.5,
+    "delay": 1.2
+  },
+  "logging": {
+    "log_file": "cashew_system.log"
+  }
+}
