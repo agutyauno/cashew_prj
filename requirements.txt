@@ -1,0 +1,10 @@
+# Generated from project imports and metadata
+# Review and pin exact versions by running `pip freeze > requirements.txt` inside your project venv
+
+ultralytics
+opencv-python
+gpiozero
+numpy
+torch
+ncnn
+Pillow
