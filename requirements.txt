@@ -4,6 +4,7 @@
 ultralytics
 opencv-python
 gpiozero
+RPi.GPIO
 numpy
 torch
 ncnn
