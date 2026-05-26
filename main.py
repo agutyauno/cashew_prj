@@ -8,6 +8,7 @@ import datetime
 import numpy as np
 from ultralytics import YOLO
 
+# Thiết lập môi trường hiển thị cho Pi
 os.environ["QT_QPA_PLATFORM"] = "xcb"
 
 # --- TỰ ĐỘNG PHÁT HIỆN MÔI TRƯỜNG & MOCK SERVO ---
@@ -28,8 +29,7 @@ except (ImportError, RuntimeError):
         @angle.setter
         def angle(self, val):
             self._angle = val
-            # In ra console để người dùng quan sát khi chạy thử trên máy tính
-            print(f"[MÔ PHỎNG SERVO Pin {self.pin}] -> Góc: {val}°")
+            print(f"🤖 [MÔ PHỎNG SERVO Pin {self.pin}] -> Góc: {val}°")
 
 # --- LỚP THEO DÕI HẠT ĐIỀU (CENTROID TRACKER) ---
 class CentroidTracker:
@@ -53,7 +53,6 @@ class CentroidTracker:
             del self.disappeared[object_id]
 
     def update(self, rects):
-        # rects: danh sách dạng [x1, y1, x2, y2, label]
         if len(rects) == 0:
             for object_id in list(self.disappeared.keys()):
                 self.disappeared[object_id] += 1
@@ -76,7 +75,6 @@ class CentroidTracker:
             object_ids = list(self.objects.keys())
             object_centroids = np.array([ (v[0], v[1]) for v in self.objects.values() ])
 
-            # Tính khoảng cách Euclidean
             D = np.linalg.norm(object_centroids[:, np.newaxis] - input_centroids, axis=2)
 
             rows = D.min(axis=1).argsort()
@@ -111,7 +109,7 @@ class CentroidTracker:
 
         return self.objects
 
-# --- LUỒNG ĐIỀU KHIỂN SERVO (SERVO WORKER) ---
+# --- LUỒNG ĐIỀU KHIỂN SERVO PHI NGHẼN (SERVO WORKER) ---
 class ServoWorker(threading.Thread):
     def __init__(self, pin, min_pulse, max_pulse, default_angle, active_angle, hold_time, name=""):
         super().__init__(daemon=True)
@@ -131,30 +129,27 @@ class ServoWorker(threading.Thread):
         self.queue.put(trigger_time)
         
     def run(self):
-        print(f"Luồng điều khiển Servo {self.name_tag} (Pin {self.pin}) đã khởi chạy.")
+        print(f"🟢 Luồng điều khiển Servo {self.name_tag} (Pin {self.pin}) đã khởi chạy.")
         while self.is_running:
             try:
-                # Lấy lịch trình kích hoạt tiếp theo từ hàng đợi
                 trigger_time = self.queue.get(timeout=0.1)
             except queue.Empty:
                 continue
                 
-            # Chờ tới đúng thời điểm kích hoạt
             now = time.time()
             sleep_duration = trigger_time - now
             if sleep_duration > 0:
                 time.sleep(sleep_duration)
                 
-            # Thực hiện chu kỳ gạt/lật
             try:
-                print(f"[KÍCH HOẠT] Servo {self.name_tag} (Pin {self.pin}) -> Góc chạy {self.active_angle}°")
+                print(f"⚡ [KÍCH HOẠT] Servo {self.name_tag} (Pin {self.pin}) -> Góc chạy {self.active_angle}°")
                 self.servo.angle = self.active_angle
                 time.sleep(self.hold_time)
                 
-                print(f"[HOÀN TÁC] Servo {self.name_tag} (Pin {self.pin}) -> Về góc chờ {self.default_angle}°")
+                print(f"↩️ [HOÀN TÁC] Servo {self.name_tag} (Pin {self.pin}) -> Về góc chờ {self.default_angle}°")
                 self.servo.angle = self.default_angle
             except Exception as e:
-                print(f"Lỗi điều khiển Servo {self.name_tag}: {e}")
+                print(f"❌ Lỗi điều khiển Servo {self.name_tag}: {e}")
                 
             self.queue.task_done()
 
@@ -173,7 +168,6 @@ class CashewSortingSystem:
         }
         
         # Hàng đợi FIFO để lưu trạng thái hạt từ Vùng A sang Vùng B
-        # Định dạng: {'side_a': 'dep'/'xau', 'time_a': timestamp, 'side_b': None}
         self.cashew_fifo = []
         self.fifo_lock = threading.Lock()
         
@@ -188,16 +182,13 @@ class CashewSortingSystem:
         self.triggered_a = set()
         self.triggered_b = set()
         
-        # Khởi động luồng điều khiển servo
         self.init_servos()
-        
-        # Khởi động mô hình YOLO NCNN
         self.init_model()
 
     def load_config(self):
         with open(self.config_path, "r", encoding="utf-8") as f:
             self.cfg = json.load(f)
-        print("Đã nạp file cấu hình config.json thành công.")
+        print("⚙️ Đã nạp file cấu hình config.json thành công (Băng tải PHẢI -> TRÁI).")
 
     def init_servos(self):
         s1_cfg = self.cfg["servo_1"]
@@ -228,22 +219,21 @@ class CashewSortingSystem:
 
     def init_model(self):
         m_cfg = self.cfg["model"]
-        print(f"Đang nạp mô hình AI từ: {m_cfg['path']}...")
+        print(f"🧠 Đang nạp mô hình AI từ: {m_cfg['path']}...")
         try:
             self.model = YOLO(m_cfg["path"], task="detect")
-            print("Đã nạp mô hình AI thành công!")
+            print("✅ Đã nạp mô hình AI thành công!")
         except Exception as e:
-            print(f"Lỗi nạp mô hình AI: {e}")
+            print(f"❌ Lỗi nạp mô hình AI: {e}")
             raise e
 
     def log_result(self, cashew_num, side_a, side_b, result):
         log_cfg = self.cfg["logging"]
         log_msg = f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] [HẠT #{cashew_num}] Mặt A: {side_a.upper()} | Mặt B: {side_b.upper()} -> KẾT QUẢ: {result.upper()}\n"
         
-        # Ghi log ra file
         with open(log_cfg["log_file"], "a", encoding="utf-8") as f:
             f.write(log_msg)
-        print(f"{log_msg.strip()}")
+        print(f"📝 {log_msg.strip()}")
 
     def cleanup_old_fifo(self):
         # Dọn dẹp các hạt bị kẹt trong FIFO quá 15 giây (phòng trường hợp hạt bị trượt khỏi băng tải)
@@ -253,13 +243,12 @@ class CashewSortingSystem:
             self.cashew_fifo = [item for item in self.cashew_fifo if now - item["time_a"] < 15.0]
             diff = original_len - len(self.cashew_fifo)
             if diff > 0:
-                print(f"Đã dọn {diff} hạt quá hạn khỏi hàng đợi FIFO.")
+                print(f"🧹 Đã dọn {diff} hạt quá hạn khỏi hàng đợi FIFO.")
 
     def run(self):
         cam_cfg = self.cfg["camera"]
         cap = cv2.VideoCapture(cam_cfg["device_id"], cv2.CAP_V4L2)
         
-        # Cấu hình camera
         cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, cam_cfg["width"])
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, cam_cfg["height"])
@@ -272,10 +261,9 @@ class CashewSortingSystem:
         print("Hệ thống đã sẵn sàng. Đang chạy vòng lặp giám sát...")
         prev_time = time.time()
         
-        # Đọc các thông số vùng và kích hoạt từ cấu hình
         reg_cfg = self.cfg["regions"]
-        y_trigger_a = reg_cfg["region_a"]["line_trigger_y"]
-        y_trigger_b = reg_cfg["region_b"]["line_trigger_y"]
+        x_trigger_a = reg_cfg["region_a"]["line_trigger_x"]
+        x_trigger_b = reg_cfg["region_b"]["line_trigger_x"]
         
         while True:
             ret, frame = cap.read()
@@ -284,49 +272,47 @@ class CashewSortingSystem:
 
             input_frame = frame.copy()
             current_time = time.time()
+            height, width = frame.shape[:2]
 
             # 1. Nhận diện YOLO NCNN
             results = self.model(input_frame, imgsz=self.cfg["model"]["imgsz"], conf=self.cfg["model"]["conf_threshold"], verbose=False)
             
-            # Khởi tạo danh sách hộp giới hạn theo phân vùng
             boxes_a = []
             boxes_b = []
-            
-            # Vẽ các đối tượng nhận diện ban đầu lên khung hình
             annotated_frame = frame.copy()
             
             if len(results) > 0 and results[0].boxes is not None:
                 for box in results[0].boxes:
                     x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
-                    conf = box.conf[0].cpu().item()
                     cls_id = int(box.cls[0].cpu().item())
-                    label = self.model.names[cls_id] # "dep" hoặc "xau"
+                    label = self.model.names[cls_id]
                     
-                    cy = int((y1 + y2) / 2.0)
+                    cx = int((x1 + x2) / 2.0)
                     
-                    # Phân loại hộp giới hạn vào Vùng A hoặc Vùng B dựa trên tọa độ y
-                    if reg_cfg["region_a"]["y_min"] <= cy <= reg_cfg["region_a"]["y_max"]:
+                    # Phân loại hộp giới hạn vào Vùng A hoặc Vùng B dựa trên trục X (Phải -> Trái)
+                    # Vùng A (Bên Phải): x_min <= cx <= x_max
+                    # Vùng B (Bên Trái): x_min <= cx <= x_max
+                    if reg_cfg["region_a"]["x_min"] <= cx <= reg_cfg["region_a"]["x_max"]:
                         boxes_a.append([x1, y1, x2, y2, label])
-                    elif reg_cfg["region_b"]["y_min"] <= cy <= reg_cfg["region_b"]["y_max"]:
+                    elif reg_cfg["region_b"]["x_min"] <= cx <= reg_cfg["region_b"]["x_max"]:
                         boxes_b.append([x1, y1, x2, y2, label])
             
             # 2. Cập nhật các bộ theo dõi centroid
             objects_a = self.tracker_a.update(boxes_a)
             objects_b = self.tracker_b.update(boxes_b)
             
-            # 3. Xử lý logic tại VÙNG A (Mặt A & Servo 1 - Lật mặt)
+            # 3. Xử lý logic tại VÙNG A (Mặt A bên phải & Servo 1 - Lật mặt)
+            # Hạt điều đi từ Phải sang Trái, nên X giảm dần. 
+            # Kích hoạt khi hạt đi VƯỢT QUA vạch kích hoạt về phía bên TRÁI (cx <= x_trigger_a)
             for obj_id, (cx, cy, label) in objects_a.items():
-                # Vẽ tâm hạt và ID
                 cv2.circle(annotated_frame, (cx, cy), 4, (0, 255, 255), -1)
                 cv2.putText(annotated_frame, f"ID_A:{obj_id} ({label})", (cx - 20, cy - 10),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
                 
-                # Điều kiện kích hoạt Servo 1: Vượt qua vạch kích hoạt và chưa từng kích hoạt trước đó
-                if cy >= y_trigger_a and obj_id not in self.triggered_a:
+                if cx <= x_trigger_a and obj_id not in self.triggered_a:
                     self.triggered_a.add(obj_id)
                     self.stats["total_a"] += 1
                     
-                    # Đưa hạt vào hàng đợi FIFO
                     with self.fifo_lock:
                         self.cashew_fifo.append({
                             "side_a": label,
@@ -334,78 +320,74 @@ class CashewSortingSystem:
                             "side_b": None
                         })
                     
-                    # Lên lịch kích hoạt Servo 1 lật mặt
                     trigger_t1 = current_time + self.cfg["servo_1"]["delay"]
                     self.servo1_worker.queue_actuation(trigger_t1)
-                    print(f"👉 VÙNG A: Hạt A_{obj_id} ({label}) vượt vạch. Lên lịch lật mặt sau {self.cfg['servo_1']['delay']}s.")
+                    print(f"👉 VÙNG A (Bên Phải): Hạt A_{obj_id} ({label}) vượt vạch trigger x={x_trigger_a}. Lên lịch lật mặt sau {self.cfg['servo_1']['delay']}s.")
             
-            # 4. Xử lý logic tại VÙNG B (Mặt B & Servo 2 - Gạt bỏ hạt lỗi)
+            # 4. Xử lý logic tại VÙNG B (Mặt B bên trái & Servo 2 - Gạt bỏ)
+            # Kích hoạt khi hạt đi VƯỢT QUA vạch kích hoạt về phía bên TRÁI (cx <= x_trigger_b)
             for obj_id, (cx, cy, label) in objects_b.items():
-                # Vẽ tâm hạt và ID
                 cv2.circle(annotated_frame, (cx, cy), 4, (255, 0, 255), -1)
                 cv2.putText(annotated_frame, f"ID_B:{obj_id} ({label})", (cx - 20, cy - 10),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 1)
                 
-                # Điều kiện kích hoạt kiểm tra cuối và gạt: Vượt qua vạch kích hoạt và chưa từng kiểm tra trước đó
-                if cy >= y_trigger_b and obj_id not in self.triggered_b:
+                if cx <= x_trigger_b and obj_id not in self.triggered_b:
                     self.triggered_b.add(obj_id)
                     self.stats["total_b"] += 1
                     
-                    # Lấy thông tin từ FIFO để so khớp 2 mặt
                     matched_cashew = None
                     with self.fifo_lock:
-                        # Tìm hạt lâu nhất chưa được quét mặt B
                         for item in self.cashew_fifo:
                             if item["side_b"] is None:
                                 item["side_b"] = label
                                 matched_cashew = item
                                 break
                     
-                    # Ghi nhận kết quả cuối cùng
                     self.processed_count += 1
                     side_a = matched_cashew["side_a"] if matched_cashew else "unknown (mất dấu mặt A)"
                     side_b = label
                     
-                    # Quy tắc quyết định: Hạt xấu nếu mặt A HOẶC mặt B xấu
                     if side_a == "xau" or side_b == "xau":
                         self.stats["bad"] += 1
                         result_str = "xau"
                         
-                        # Lên lịch kích hoạt Servo 2 gạt bỏ
                         trigger_t2 = current_time + self.cfg["servo_2"]["delay"]
                         self.servo2_worker.queue_actuation(trigger_t2)
-                        print(f"VÙNG B: Hạt B_{obj_id} bị loại! (Mặt A: {side_a}, Mặt B: {side_b}). Lên lịch gạt sau {self.cfg['servo_2']['delay']}s.")
+                        print(f"🔥 VÙNG B (Bên Trái): Hạt B_{obj_id} bị loại! (Mặt A: {side_a}, Mặt B: {side_b}). Lên lịch gạt sau {self.cfg['servo_2']['delay']}s.")
                     else:
                         self.stats["good"] += 1
                         result_str = "dep"
-                        print(f"VÙNG B: Hạt B_{obj_id} ĐẠT YÊU CẦU (Mặt A: {side_a}, Mặt B: {side_b}).")
+                        print(f"✨ VÙNG B (Bên Trái): Hạt B_{obj_id} ĐẠT YÊU CẦU (Mặt A: {side_a}, Mặt B: {side_b}).")
                         
-                    # Ghi kết quả vào log
                     self.log_result(self.processed_count, side_a, side_b, result_str)
 
-            # Dọn dẹp các hạt bị kẹt trong FIFO (tránh tràn bộ nhớ)
             if self.processed_count % 10 == 0:
                 self.cleanup_old_fifo()
 
             # --- VẼ GIAO DIỆN HIỂN THỊ (GUI) ---
-            # 1. Vẽ các đường phân chia vùng và vạch kích hoạt
-            # Vùng A (Màu xanh dương đậm)
-            cv2.line(annotated_frame, (0, reg_cfg["region_a"]["y_min"]), (cam_cfg["width"], reg_cfg["region_a"]["y_min"]), (255, 120, 0), 1)
-            cv2.line(annotated_frame, (0, reg_cfg["region_a"]["y_max"]), (cam_cfg["width"], reg_cfg["region_a"]["y_max"]), (255, 120, 0), 1)
-            cv2.line(annotated_frame, (0, y_trigger_a), (cam_cfg["width"], y_trigger_a), (255, 0, 0), 2) # Vạch kích hoạt Servo 1 (Xanh dương nét dày)
-            cv2.putText(annotated_frame, "VUNG A (Kiem tra Mat A)", (15, reg_cfg["region_a"]["y_min"] + 20),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 120, 0), 1)
-            cv2.putText(annotated_frame, "VACH KICH HOAT (SERVO 1)", (15, y_trigger_a - 8),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
+            # Vẽ các đường ranh giới dọc và vạch kích hoạt đứng dọc màn hình
+            # Vùng A (Màu xanh dương đậm ở bên PHẢI)
+            cv2.line(annotated_frame, (reg_cfg["region_a"]["x_min"], 0), (reg_cfg["region_a"]["x_min"], cam_cfg["height"]), (255, 120, 0), 1)
+            cv2.line(annotated_frame, (reg_cfg["region_a"]["x_max"], 0), (reg_cfg["region_a"]["x_max"], cam_cfg["height"]), (255, 120, 0), 1)
+            cv2.line(annotated_frame, (x_trigger_a, 0), (x_trigger_a, cam_cfg["height"]), (255, 0, 0), 2) # Vạch đứng kích hoạt Servo 1 (Xanh dương nét dày)
+            cv2.putText(annotated_frame, "VUNG A (Ben Phai - Mat A)", (reg_cfg["region_a"]["x_min"] + 10, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 120, 0), 1)
+            cv2.putText(annotated_frame, "TRIGGER 1 (SERVO 1)", (x_trigger_a - 150, cam_cfg["height"] - 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 0, 0), 1)
 
-            # Vùng B (Màu hồng sen đậm)
-            cv2.line(annotated_frame, (0, reg_cfg["region_b"]["y_min"]), (cam_cfg["width"], reg_cfg["region_b"]["y_min"]), (180, 0, 180), 1)
-            cv2.line(annotated_frame, (0, reg_cfg["region_b"]["y_max"]), (cam_cfg["width"], reg_cfg["region_b"]["y_max"]), (180, 0, 180), 1)
-            cv2.line(annotated_frame, (0, y_trigger_b), (cam_cfg["width"], y_trigger_b), (0, 0, 255), 2) # Vạch kích hoạt Gạt (Màu đỏ nét dày)
-            cv2.putText(annotated_frame, "VUNG B (Kiem tra Mat B)", (15, reg_cfg["region_b"]["y_min"] + 20),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (180, 0, 180), 1)
-            cv2.putText(annotated_frame, "VACH KICH HOAT GAT (SERVO 2)", (15, y_trigger_b - 8),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+            # Vùng B (Màu hồng sen đậm ở bên TRÁI)
+            cv2.line(annotated_frame, (reg_cfg["region_b"]["x_min"], 0), (reg_cfg["region_b"]["x_min"], cam_cfg["height"]), (180, 0, 180), 1)
+            cv2.line(annotated_frame, (reg_cfg["region_b"]["x_max"], 0), (reg_cfg["region_b"]["x_max"], cam_cfg["height"]), (180, 0, 180), 1)
+            cv2.line(annotated_frame, (x_trigger_b, 0), (x_trigger_b, cam_cfg["height"]), (0, 0, 255), 2) # Vạch đứng kích hoạt Gạt (Màu đỏ nét dày)
+            cv2.putText(annotated_frame, "VUNG B (Ben Trai - Mat B)", (reg_cfg["region_b"]["x_min"] + 10, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (180, 0, 180), 1)
+            cv2.putText(annotated_frame, "TRIGGER 2 (SERVO 2)", (x_trigger_b - 150, cam_cfg["height"] - 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 1)
+
+            # Hướng mũi tên di chuyển băng tải (phải qua trái)
+            cv2.arrowedLine(annotated_frame, (cam_cfg["width"] - 50, cam_cfg["height"] - 30), (50, cam_cfg["height"] - 30), (0, 255, 255), 2, tipLength=0.05)
+            cv2.putText(annotated_frame, "HUONG BANG CHUYEN", (cam_cfg["width"] // 2 - 80, cam_cfg["height"] - 40),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
 
             # Vẽ bounding boxes hiện thời
             if len(results) > 0 and results[0].boxes is not None:
@@ -420,46 +402,35 @@ class CashewSortingSystem:
                     cv2.putText(annotated_frame, f"{label} {conf:.2f}", (x1, y1 - 8),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
 
-            # 2. Vẽ bảng điều khiển thông tin, thống kê trực quan
-            # Tạo một hình chữ nhật nền tối góc trên bên phải để ghi thông tin thống kê
+            # Bảng thống kê
             overlay = annotated_frame.copy()
-            cv2.rectangle(overlay, (cam_cfg["width"] - 250, 10), (cam_cfg["width"] - 10, 160), (0, 0, 0), -1)
+            # Đặt bảng thống kê ở giữa phía trên để không cản trở góc nhìn trái/phải
+            cv2.rectangle(overlay, (width // 2 - 125, 10), (width // 2 + 125, 120), (0, 0, 0), -1)
             cv2.addWeighted(overlay, 0.6, annotated_frame, 0.4, 0, annotated_frame)
             
-            # Tính toán FPS
             fps = 1.0 / (time.time() - prev_time) if (time.time() - prev_time) > 0 else 0.0
             prev_time = time.time()
             
-            # In các dòng text thống kê
-            cv2.putText(annotated_frame, "MAY PHAN LOAI HAT DIEU", (cam_cfg["width"] - 240, 30),
+            cv2.putText(annotated_frame, "MAY PHAN LOAI HAT DIEU", (width // 2 - 110, 28),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)
-            cv2.putText(annotated_frame, f"FPS: {fps:.1f}", (cam_cfg["width"] - 240, 55),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-            cv2.putText(annotated_frame, f"Hat Da Kiem (A): {self.stats['total_a']}", (cam_cfg["width"] - 240, 80),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-            cv2.putText(annotated_frame, f"Dat Yeu Cau (Dep): {self.stats['good']}", (cam_cfg["width"] - 240, 105),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-            cv2.putText(annotated_frame, f"Bi Loai (Xau): {self.stats['bad']}", (cam_cfg["width"] - 240, 130),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
-            
-            # Hiển thị hàng đợi FIFO hiện tại dưới dạng text nhỏ
-            fifo_len = len(self.cashew_fifo)
-            cv2.putText(annotated_frame, f"Queue FIFO: {fifo_len} hat", (cam_cfg["width"] - 240, 150),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 0), 1)
+            cv2.putText(annotated_frame, f"FPS: {fps:.1f}", (width // 2 - 110, 48),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 1)
+            cv2.putText(annotated_frame, f"Da kiem (A): {self.stats['total_a']} | FIFO: {len(self.cashew_fifo)}", (width // 2 - 110, 68),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 1)
+            cv2.putText(annotated_frame, f"Dat (Dep): {self.stats['good']}", (width // 2 - 110, 88),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 255, 0), 1)
+            cv2.putText(annotated_frame, f"Loai (Xau): {self.stats['bad']}", (width // 2 - 110, 108),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 1)
 
-            # Hiển thị cửa sổ
             cv2.imshow("He Thong Phan Loai Hat Dieu AI", annotated_frame)
 
-            # Phím tắt đóng chương trình (nhấn 'q')
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 print("👋 Đang dừng hệ thống và dọn dẹp tài nguyên...")
                 break
 
-        # Giải phóng thiết bị
         cap.release()
         cv2.destroyAllWindows()
         
-        # Dừng luồng servo
         self.servo1_worker.is_running = False
         self.servo2_worker.is_running = False
 

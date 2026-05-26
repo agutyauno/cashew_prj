@@ -12,14 +12,14 @@
   },
   "regions": {
     "region_a": {
-      "y_min": 0,
-      "y_max": 360,
-      "line_trigger_y": 280
+      "x_min": 360,
+      "x_max": 720,
+      "line_trigger_x": 450
     },
     "region_b": {
-      "y_min": 360,
-      "y_max": 720,
-      "line_trigger_y": 550
+      "x_min": 0,
+      "x_max": 360,
+      "line_trigger_x": 150
     }
   },
   "servo_1": {
