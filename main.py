@@ -395,7 +395,7 @@ class CashewSortingSystem:
             cv2.line(annotated_frame, (0, y_trigger_a), (cam_cfg["width"], y_trigger_a), (255, 0, 0), 2) # Vạch kích hoạt Servo 1 (Xanh dương nét dày)
             cv2.putText(annotated_frame, "VUNG A (Kiem tra Mat A)", (15, reg_cfg["region_a"]["y_min"] + 20),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 120, 0), 1)
-            cv2.putText(annotated_frame, "VACH KICH HOAT LUAT (SERVO 1)", (15, y_trigger_a - 8),
+            cv2.putText(annotated_frame, "VACH KICH HOAT (SERVO 1)", (15, y_trigger_a - 8),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
 
             # Vùng B (Màu hồng sen đậm)
