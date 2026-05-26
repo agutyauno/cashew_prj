@@ -5,8 +5,8 @@ import cv2
 from gpiozero import AngularServo
 
 # Định nghĩa chân kết nối
-Servo1_Pin = 14
-Servo2_Pin = 15
+Servo1_Pin = 23
+Servo2_Pin = 24
 
 servo1 = AngularServo(Servo1_Pin, min_pulse_width=0.5/1000, max_pulse_width=2.6/1000)
 servo2 = AngularServo(Servo2_Pin, min_pulse_width=0.5/1000, max_pulse_width=2.6/1000)
