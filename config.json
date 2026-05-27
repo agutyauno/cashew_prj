@@ -26,10 +26,10 @@
     "pin": 14,
     "min_pulse_width": 0.0005,
     "max_pulse_width": 0.0026,
-    "default_angle": 0.0,
-    "active_angle": 90.0,
-    "hold_time": 0.3,
-    "delay": 1.0
+    "default_angle": -5.0,
+    "active_angle": -90.0,
+    "hold_time": 2.0,
+    "delay": 0.0
   },
   "servo_2": {
     "pin": 15,

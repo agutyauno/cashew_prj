@@ -29,7 +29,7 @@ except (ImportError, RuntimeError):
         @angle.setter
         def angle(self, val):
             self._angle = val
-            print(f"🤖 [MÔ PHỎNG SERVO Pin {self.pin}] -> Góc: {val}°")
+            print(f"[MÔ PHỎNG SERVO Pin {self.pin}] -> Góc: {val}°")
 
 # --- LỚP THEO DÕI HẠT ĐIỀU (CENTROID TRACKER) ---
 class CentroidTracker:
@@ -129,7 +129,7 @@ class ServoWorker(threading.Thread):
         self.queue.put(trigger_time)
         
     def run(self):
-        print(f"🟢 Luồng điều khiển Servo {self.name_tag} (Pin {self.pin}) đã khởi chạy.")
+        print(f"Luồng điều khiển Servo {self.name_tag} (Pin {self.pin}) đã khởi chạy.")
         while self.is_running:
             try:
                 trigger_time = self.queue.get(timeout=0.1)
@@ -142,14 +142,14 @@ class ServoWorker(threading.Thread):
                 time.sleep(sleep_duration)
                 
             try:
-                print(f"⚡ [KÍCH HOẠT] Servo {self.name_tag} (Pin {self.pin}) -> Góc chạy {self.active_angle}°")
+                print(f"[KÍCH HOẠT] Servo {self.name_tag} (Pin {self.pin}) -> Góc chạy {self.active_angle}°")
                 self.servo.angle = self.active_angle
                 time.sleep(self.hold_time)
                 
-                print(f"↩️ [HOÀN TÁC] Servo {self.name_tag} (Pin {self.pin}) -> Về góc chờ {self.default_angle}°")
+                print(f"[HOÀN TÁC] Servo {self.name_tag} (Pin {self.pin}) -> Về góc chờ {self.default_angle}°")
                 self.servo.angle = self.default_angle
             except Exception as e:
-                print(f"❌ Lỗi điều khiển Servo {self.name_tag}: {e}")
+                print(f"Lỗi điều khiển Servo {self.name_tag}: {e}")
                 
             self.queue.task_done()
 
@@ -188,7 +188,7 @@ class CashewSortingSystem:
     def load_config(self):
         with open(self.config_path, "r", encoding="utf-8") as f:
             self.cfg = json.load(f)
-        print("⚙️ Đã nạp file cấu hình config.json thành công (Băng tải PHẢI -> TRÁI).")
+        print("Đã nạp file cấu hình config.json thành công (Băng tải PHẢI -> TRÁI).")
 
     def init_servos(self):
         s1_cfg = self.cfg["servo_1"]
@@ -219,12 +219,12 @@ class CashewSortingSystem:
 
     def init_model(self):
         m_cfg = self.cfg["model"]
-        print(f"🧠 Đang nạp mô hình AI từ: {m_cfg['path']}...")
+        print(f"Đang nạp mô hình AI từ: {m_cfg['path']}...")
         try:
             self.model = YOLO(m_cfg["path"], task="detect")
-            print("✅ Đã nạp mô hình AI thành công!")
+            print("Đã nạp mô hình AI thành công!")
         except Exception as e:
-            print(f"❌ Lỗi nạp mô hình AI: {e}")
+            print(f"Lỗi nạp mô hình AI: {e}")
             raise e
 
     def log_result(self, cashew_num, side_a, side_b, result):
