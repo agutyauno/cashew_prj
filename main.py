@@ -121,6 +121,9 @@ class ServoWorker(threading.Thread):
         
         self.servo = AngularServo(pin, min_pulse_width=min_pulse, max_pulse_width=max_pulse)
         self.servo.angle = default_angle
+        # Ngắt xung ngay sau khi khởi tạo để tránh giật lúc chờ hạt đầu tiên
+        time.sleep(0.5)
+        self.servo.value = None
         
         self.queue = queue.Queue()
         self.is_running = True
@@ -148,6 +151,12 @@ class ServoWorker(threading.Thread):
                 
                 print(f"[HOÀN TÁC] Servo {self.name_tag} (Pin {self.pin}) -> Về góc chờ {self.default_angle}°")
                 self.servo.angle = self.default_angle
+                
+                # Chờ một khoảng ngắn để servo hoàn tất việc di chuyển về vị trí mặc định
+                time.sleep(0.4)
+                # Ngắt xung PWM để tránh hiện tượng giật (jitter) khi ở trạng thái nghỉ
+                self.servo.value = None
+                
             except Exception as e:
                 print(f"Lỗi điều khiển Servo {self.name_tag}: {e}")
                 
