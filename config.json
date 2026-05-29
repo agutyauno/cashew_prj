@@ -12,14 +12,14 @@
   },
   "regions": {
     "region_a": {
-      "x_min": 360,
+      "x_min": 140,
       "x_max": 720,
-      "line_trigger_x": 450
+      "line_trigger_x": 471
     },
     "region_b": {
       "x_min": 0,
-      "x_max": 360,
-      "line_trigger_x": 150
+      "x_max": 140,
+      "line_trigger_x": 68
     }
   },
   "servo_1": {
@@ -27,17 +27,17 @@
     "min_pulse_width": 0.0005,
     "max_pulse_width": 0.0026,
     "default_angle": -5.0,
-    "active_angle": -90.0,
-    "hold_time": 2.0,
+    "active_angle": -80.0,
+    "hold_time": 3,
     "delay": 0.0
   },
   "servo_2": {
     "pin": 15,
     "min_pulse_width": 0.0005,
     "max_pulse_width": 0.0026,
-    "default_angle": 90.0,
-    "active_angle": 45.0,
-    "hold_time": 0.5,
+    "default_angle": 0.0,
+    "active_angle": -40.0,
+    "hold_time": 3,
     "delay": 1.2
   },
   "logging": {

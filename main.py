@@ -233,7 +233,7 @@ class CashewSortingSystem:
         
         with open(log_cfg["log_file"], "a", encoding="utf-8") as f:
             f.write(log_msg)
-        print(f"📝 {log_msg.strip()}")
+        print(f"{log_msg.strip()}")
 
     def cleanup_old_fifo(self):
         # Dọn dẹp các hạt bị kẹt trong FIFO quá 15 giây (phòng trường hợp hạt bị trượt khỏi băng tải)
@@ -243,7 +243,7 @@ class CashewSortingSystem:
             self.cashew_fifo = [item for item in self.cashew_fifo if now - item["time_a"] < 15.0]
             diff = original_len - len(self.cashew_fifo)
             if diff > 0:
-                print(f"🧹 Đã dọn {diff} hạt quá hạn khỏi hàng đợi FIFO.")
+                print(f"Đã dọn {diff} hạt quá hạn khỏi hàng đợi FIFO.")
 
     def run(self):
         cam_cfg = self.cfg["camera"]
@@ -322,7 +322,7 @@ class CashewSortingSystem:
                     
                     trigger_t1 = current_time + self.cfg["servo_1"]["delay"]
                     self.servo1_worker.queue_actuation(trigger_t1)
-                    print(f"👉 VÙNG A (Bên Phải): Hạt A_{obj_id} ({label}) vượt vạch trigger x={x_trigger_a}. Lên lịch lật mặt sau {self.cfg['servo_1']['delay']}s.")
+                    print(f"VÙNG A (Bên Phải): Hạt A_{obj_id} ({label}) vượt vạch trigger x={x_trigger_a}. Lên lịch lật mặt sau {self.cfg['servo_1']['delay']}s.")
             
             # 4. Xử lý logic tại VÙNG B (Mặt B bên trái & Servo 2 - Gạt bỏ)
             # Kích hoạt khi hạt đi VƯỢT QUA vạch kích hoạt về phía bên TRÁI (cx <= x_trigger_b)
@@ -353,11 +353,11 @@ class CashewSortingSystem:
                         
                         trigger_t2 = current_time + self.cfg["servo_2"]["delay"]
                         self.servo2_worker.queue_actuation(trigger_t2)
-                        print(f"🔥 VÙNG B (Bên Trái): Hạt B_{obj_id} bị loại! (Mặt A: {side_a}, Mặt B: {side_b}). Lên lịch gạt sau {self.cfg['servo_2']['delay']}s.")
+                        print(f"VÙNG B (Bên Trái): Hạt B_{obj_id} bị loại! (Mặt A: {side_a}, Mặt B: {side_b}). Lên lịch gạt sau {self.cfg['servo_2']['delay']}s.")
                     else:
                         self.stats["good"] += 1
                         result_str = "dep"
-                        print(f"✨ VÙNG B (Bên Trái): Hạt B_{obj_id} ĐẠT YÊU CẦU (Mặt A: {side_a}, Mặt B: {side_b}).")
+                        print(f"VÙNG B (Bên Trái): Hạt B_{obj_id} ĐẠT YÊU CẦU (Mặt A: {side_a}, Mặt B: {side_b}).")
                         
                     self.log_result(self.processed_count, side_a, side_b, result_str)
 
@@ -425,7 +425,7 @@ class CashewSortingSystem:
             cv2.imshow("He Thong Phan Loai Hat Dieu AI", annotated_frame)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
-                print("👋 Đang dừng hệ thống và dọn dẹp tài nguyên...")
+                print("Đang dừng hệ thống và dọn dẹp tài nguyên...")
                 break
 
         cap.release()
