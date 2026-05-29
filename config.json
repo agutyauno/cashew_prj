@@ -28,7 +28,7 @@
     "max_pulse_width": 0.0026,
     "default_angle": -5.0,
     "active_angle": -80.0,
-    "hold_time": 3,
+    "hold_time": 1,
     "delay": 0.0
   },
   "servo_2": {
