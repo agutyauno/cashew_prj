@@ -1,6 +1,6 @@
 {
   "model": {
-    "path": "./cashew_26n_ncnn_model",
+    "path": "./tinhchinh_ncnn_model",
     "conf_threshold": 0.3,
     "imgsz": 736
   },

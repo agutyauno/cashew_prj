@@ -148,7 +148,8 @@ class ServoWorker(threading.Thread):
                 print(f"[KÍCH HOẠT] Servo {self.name_tag} (Pin {self.pin}) -> Góc chạy {self.active_angle}°")
                 self.servo.angle = self.active_angle
                 time.sleep(self.hold_time)
-                
+                self.servo.value = None
+
                 print(f"[HOÀN TÁC] Servo {self.name_tag} (Pin {self.pin}) -> Về góc chờ {self.default_angle}°")
                 self.servo.angle = self.default_angle
                 
