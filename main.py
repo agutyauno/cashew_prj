@@ -434,10 +434,11 @@ class CashewSortingSystem:
 
             cv2.imshow("He Thong Phan Loai Hat Dieu AI", annotated_frame)
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord('q'):
                 print("Đang dừng hệ thống và dọn dẹp tài nguyên...")
                 break
-            if cv2.waitKey(1) & 0xFF == ord('s'):
+            elif key == ord('s'):
                 trigger_t2 = current_time + self.cfg["servo_2"]["delay"]
                 self.servo2_worker.queue_actuation(trigger_t2)
                 break
