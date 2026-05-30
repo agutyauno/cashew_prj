@@ -441,7 +441,6 @@ class CashewSortingSystem:
             elif key == ord('s'):
                 trigger_t2 = current_time + self.cfg["servo_2"]["delay"]
                 self.servo2_worker.queue_actuation(trigger_t2)
-                break
         cap.release()
         cv2.destroyAllWindows()
         
