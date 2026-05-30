@@ -284,7 +284,7 @@ class CashewSortingSystem:
             current_time = time.time()
             height, width = frame.shape[:2]
 
-            # 1. Nhận diện YOLO NCNN
+            # 1. Nhận diện YOLO
             results = self.model(input_frame, imgsz=self.cfg["model"]["imgsz"], conf=self.cfg["model"]["conf_threshold"], verbose=False)
             
             boxes_a = []
@@ -334,7 +334,7 @@ class CashewSortingSystem:
                     self.servo1_worker.queue_actuation(trigger_t1)
                     print(f"VÙNG A (Bên Phải): Hạt A_{obj_id} ({label}) vượt vạch trigger x={x_trigger_a}. Lên lịch lật mặt sau {self.cfg['servo_1']['delay']}s.")
             
-            # 4. Xử lý logic tại VÙNG B (Mặt B bên trái & Servo 2 - Gạt bỏ)
+            # 4. Xử lý logic tại VÙNG B 
             # Kích hoạt khi hạt đi VƯỢT QUA vạch kích hoạt về phía bên TRÁI (cx <= x_trigger_b)
             for obj_id, (cx, cy, label) in objects_b.items():
                 cv2.circle(annotated_frame, (cx, cy), 4, (255, 0, 255), -1)
@@ -376,7 +376,7 @@ class CashewSortingSystem:
 
             # --- VẼ GIAO DIỆN HIỂN THỊ (GUI) ---
             # Vẽ các đường ranh giới dọc và vạch kích hoạt đứng dọc màn hình
-            # Vùng A (Màu xanh dương đậm ở bên PHẢI)
+            # Vùng A 
             cv2.line(annotated_frame, (reg_cfg["region_a"]["x_min"], 0), (reg_cfg["region_a"]["x_min"], cam_cfg["height"]), (255, 120, 0), 1)
             cv2.line(annotated_frame, (reg_cfg["region_a"]["x_max"], 0), (reg_cfg["region_a"]["x_max"], cam_cfg["height"]), (255, 120, 0), 1)
             cv2.line(annotated_frame, (x_trigger_a, 0), (x_trigger_a, cam_cfg["height"]), (255, 0, 0), 2) # Vạch đứng kích hoạt Servo 1 (Xanh dương nét dày)
@@ -385,7 +385,7 @@ class CashewSortingSystem:
             cv2.putText(annotated_frame, "TRIGGER 1 (SERVO 1)", (x_trigger_a - 150, cam_cfg["height"] - 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 0, 0), 1)
 
-            # Vùng B (Màu hồng sen đậm ở bên TRÁI)
+            # Vùng B 
             cv2.line(annotated_frame, (reg_cfg["region_b"]["x_min"], 0), (reg_cfg["region_b"]["x_min"], cam_cfg["height"]), (180, 0, 180), 1)
             cv2.line(annotated_frame, (reg_cfg["region_b"]["x_max"], 0), (reg_cfg["region_b"]["x_max"], cam_cfg["height"]), (180, 0, 180), 1)
             cv2.line(annotated_frame, (x_trigger_b, 0), (x_trigger_b, cam_cfg["height"]), (0, 0, 255), 2) # Vạch đứng kích hoạt Gạt (Màu đỏ nét dày)
@@ -414,7 +414,6 @@ class CashewSortingSystem:
 
             # Bảng thống kê
             overlay = annotated_frame.copy()
-            # Đặt bảng thống kê ở giữa phía trên để không cản trở góc nhìn trái/phải
             cv2.rectangle(overlay, (width // 2 - 125, 10), (width // 2 + 125, 120), (0, 0, 0), -1)
             cv2.addWeighted(overlay, 0.6, annotated_frame, 0.4, 0, annotated_frame)
             
@@ -425,7 +424,7 @@ class CashewSortingSystem:
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 2)
             cv2.putText(annotated_frame, f"FPS: {fps:.1f}", (width // 2 - 110, 48),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 1)
-            cv2.putText(annotated_frame, f"Da kiem (A): {self.stats['total_a']} | FIFO: {len(self.cashew_fifo)}", (width // 2 - 110, 68),
+            cv2.putText(annotated_frame, f"Da kiem tra: {self.stats['total_a']} | FIFO: {len(self.cashew_fifo)}", (width // 2 - 110, 68),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 1)
             cv2.putText(annotated_frame, f"Dat (Dep): {self.stats['good']}", (width // 2 - 110, 88),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 255, 0), 1)
@@ -440,6 +439,8 @@ class CashewSortingSystem:
                 break
             elif key == ord('s'):
                 trigger_t2 = current_time + self.cfg["servo_2"]["delay"]
+                self.stats["bad"] += 1
+                self.stats["good"] -= 1
                 self.servo2_worker.queue_actuation(trigger_t2)
         cap.release()
         cv2.destroyAllWindows()
