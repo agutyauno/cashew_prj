@@ -437,7 +437,9 @@ class CashewSortingSystem:
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 print("Đang dừng hệ thống và dọn dẹp tài nguyên...")
                 break
-
+            if cv2.waitKey(1) & 0xFF == ord('s'):
+                self.servo2_worker.run()
+                break
         cap.release()
         cv2.destroyAllWindows()
         
